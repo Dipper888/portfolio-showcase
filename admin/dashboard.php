@@ -100,3 +100,23 @@ if (!isset($_SESSION["user_id"])) {
         </div>
 
     </div>
+    <!-- Submissions -->
+    <div class="col-md-4 mb-3">
+
+        <div class="card">
+
+            <div class="card-body">
+
+                <h5>Submissions</h5>
+
+                <h2>
+                    <?php echo $totalSubmissions; ?>
+                </h2>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
