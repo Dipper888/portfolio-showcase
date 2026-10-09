@@ -102,8 +102,10 @@ require_once "../includes/header.php";
         </div>
         <!-- Description -->
         <div class="mb-3">
-
             <label class="form-label">Description</label>
             <textarea name="description" class="form-control" rows="4" required></textarea>
 
         </div>
+        <button type="submit" class="btn btn-primary">Create Category</button>
+
+    </form>
