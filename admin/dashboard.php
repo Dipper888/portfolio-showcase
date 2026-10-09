@@ -11,11 +11,23 @@ if (!isset($_SESSION["user_id"])) {
 
 }
 
-// Check if user is admin
-if ($_SESSION["role"] != "admin") {
+    // Check if user is admin
+    if ($_SESSION["role"] != "admin") {
 
-    header("Location: ../student/dashboard.php");
-    exit();
+        header("Location: ../student/dashboard.php");
+        exit();
 
-}
+    }
+    // Count students
+    $sql = "SELECT COUNT(*) AS total_students
+            FROM users
+            WHERE role = 'student'";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+
+    $totalStudents = $row["total_students"];
 ?>
