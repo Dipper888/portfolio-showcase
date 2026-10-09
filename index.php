@@ -17,7 +17,7 @@ if ($_SESSION["role"] === "student") {
     exit();
 }
 
-// If role is invalid
+// Destroy the session and redirect to login page
 session_unset();
 session_destroy();
 
