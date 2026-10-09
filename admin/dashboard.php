@@ -18,6 +18,7 @@ if (!isset($_SESSION["user_id"])) {
         exit();
 
     }
+    
     // Count students
     $sql = "SELECT COUNT(*) AS total_students
             FROM users
@@ -30,4 +31,17 @@ if (!isset($_SESSION["user_id"])) {
     $row = $result->fetch_assoc();
 
     $totalStudents = $row["total_students"];
+
+
+    // Count categories
+    $sql = "SELECT COUNT(*) AS total_categories
+            FROM categories";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+
+    $totalCategories = $row["total_categories"];
 ?>
