@@ -100,3 +100,10 @@ require_once "../includes/header.php";
             <input type="text" name="category_name" class="form-control" required>
 
         </div>
+        <!-- Description -->
+        <div class="mb-3">
+
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-control" rows="4" required></textarea>
+
+        </div>
