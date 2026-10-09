@@ -134,3 +134,53 @@ if (!isset($_SESSION["user_id"])) {
     </div>
 
 </div>
+<h3 class="mt-4">Recent Submissions</h3>
+
+<div class="table-responsive">
+
+    <table class="table table-bordered">
+
+        <thead>
+
+            <tr>
+                <th>Student Name</th>
+                <th>Project Title</th>
+                <th>Category</th>
+                <th>Date</th>
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            <?php while ($project = $recentSubmissions->fetch_assoc()) { ?>
+
+                <tr>
+
+                    <td>
+                        <?php echo htmlspecialchars($project["full_name"]); ?>
+                    </td>
+
+                    <td>
+                        <?php echo htmlspecialchars($project["title"]); ?>
+                    </td>
+
+                    <td>
+                        <?php echo htmlspecialchars($project["category_name"]); ?>
+                    </td>
+
+                    <td>
+                        <?php echo htmlspecialchars($project["created_at"]); ?>
+                    </td>
+
+                </tr>
+
+            <?php } ?>
+
+        </tbody>
+
+    </table>
+
+</div>
+
+<?php require_once "../includes/footer.php"; ?>
