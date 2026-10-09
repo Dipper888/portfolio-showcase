@@ -56,6 +56,20 @@ if (!isset($_SESSION["user_id"])) {
     $row = $result->fetch_assoc();
 
     $totalSubmissions = $row["total_submissions"];
+
+    // Get recent submissions
+    $sql = "SELECT projects.title,projects.created_at,users.full_name,categories.category_name
+            FROM projects
+            JOIN users ON projects.user_id = users.id
+            JOIN categories ON projects.category_id = categories.id
+            ORDER BY projects.created_at DESC
+            LIMIT 5";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->execute();
+
+    $recentSubmissions = $stmt->get_result();
+    require_once "../includes/header.php";
 ?>
 
 <h2>Admin Overview</h2>
