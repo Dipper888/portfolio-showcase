@@ -89,7 +89,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 <div class="container mt-5">
 
-    <div class="col-md-6 mx-auto">
+    <div class="col-md-6 mx-auto auth-card">
 
         <h2 class="mb-4">Student Registration</h2>
 
