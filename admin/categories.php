@@ -89,3 +89,14 @@ require_once "../includes/header.php";
         </div>
 
     <?php } ?>
+    <h4 class="mt-4">Create Category</h4>
+
+    <form method="POST">
+
+        <!-- Category Name -->
+        <div class="mb-3">
+
+            <label class="form-label">Category Name</label>
+            <input type="text" name="category_name" class="form-control" required>
+
+        </div>
