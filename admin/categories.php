@@ -64,5 +64,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->close();
     }
 }
-
+require_once "../includes/header.php";
 ?>
+
+<h2>Manage Categories</h2>
+
+<p>Create and manage project categories.</p>
+
+
+<!-- Error message -->
+<?php if ($error != "") { ?>
+
+    <div class="alert alert-danger">
+        <?php echo htmlspecialchars($error); ?>
+    </div>
+
+<?php } ?>
