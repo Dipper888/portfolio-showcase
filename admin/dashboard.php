@@ -82,3 +82,21 @@ if (!isset($_SESSION["user_id"])) {
         </div>
 
     </div>
+     <!-- Categories -->
+    <div class="col-md-4 mb-3">
+
+        <div class="card">
+
+            <div class="card-body">
+
+                <h5>Categories</h5>
+
+                <h2>
+                    <?php echo $totalCategories; ?>
+                </h2>
+
+            </div>
+
+        </div>
+
+    </div>
