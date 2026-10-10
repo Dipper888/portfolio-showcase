@@ -23,8 +23,8 @@ if ($_SESSION["role"] != "admin") {
 $error = "";
 $success = "";
 
-// Check when form is submitted
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+// Create category
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["category_name"])) {
 
     // Get form data
     $categoryName = trim($_POST["category_name"]);
@@ -44,104 +44,88 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt = $conn->prepare($sql);
 
         // Bind values
-        $stmt->bind_param(
-            "ss",
-            $categoryName,
-            $description
-        );
+        $stmt->bind_param("ss",$categoryName,$description);
 
         // Execute statement
         if ($stmt->execute()) {
-
             $success = "Category created successfully.";
-
         } else {
-
             $error = "Failed to create category.";
-
         }
 
         $stmt->close();
     }
+}
 
-    // Get all categories
+
+    // Delete category
+    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["delete_id"])) {
+        $deleteId = $_POST["delete_id"];
+        $sql = "DELETE FROM categories WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i",$deleteId);
+
+        if ($stmt->execute()) {
+            $success = "Category deleted successfully.";
+        } else {
+            $error = "Failed to delete category.";
+        }
+        $stmt->close();
+    }
+        // Get all categories
         $sql = "SELECT id, category_name, description, created_at FROM categories ORDER BY id DESC";
-
         $stmt = $conn->prepare($sql);
         $stmt->execute();
-
         $categories = $stmt->get_result();
-}
-require_once "../includes/header.php";
+
+        require_once "../includes/header.php";
 ?>
+        <h2>Manage Categories</h2>
+        <p>Create and manage project categories.</p>
 
-    <h2>Manage Categories</h2>
+        <!-- Create Category -->
+        <h4 class="mt-4">Create Category</h4>
 
-    <p>Create and manage project categories.</p>
+        <form method="POST">
 
+            <div class="mb-3">
+                <label class="form-label">Category Name</label>
+                <input type="text" name="category_name" class="form-control" required>
+            </div>
 
-    <!-- Error message -->
-    <?php if ($error != "") { ?>
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control" rows="4" required></textarea>
+            </div>
 
-        <div class="alert alert-danger">
-            <?php echo htmlspecialchars($error); ?>
-        </div>
+            <button type="submit" class="btn btn-primary">Create Category</button>
 
-    <?php } ?>
+        </form>
 
-    <!-- Success message -->
-    <?php if ($success != "") { ?>
-
-        <div class="alert alert-success">
-            <?php echo htmlspecialchars($success); ?>
-        </div>
-
-    <?php } ?>
-    <h4 class="mt-4">Create Category</h4>
-
-    <form method="POST">
-
-        <!-- Category Name -->
-        <div class="mb-3">
-
-            <label class="form-label">Category Name</label>
-            <input type="text" name="category_name" class="form-control" required>
-
-        </div>
-        <!-- Description -->
-        <div class="mb-3">
-            <label class="form-label">Description</label>
-            <textarea name="description" class="form-control" rows="4" required></textarea>
-
-        </div>
-        <button type="submit" class="btn btn-primary">Create Category</button>
-
-    </form>
-
+        <!-- Existing  Category -->
         <h4 class="mt-5">Existing Categories</h4>
         <div class="table-responsive">
-
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Category Name</th>
-                    <th>Description</th>
-                    <th>Date Created</th>
-                </tr>
-
-            </thead>
-            <tbody>
-                <?php while ($category = $categories->fetch_assoc()) { ?>
+            <table class="table table-bordered">
+                <thead>
                     <tr>
-                        <td><?php echo $category["id"]; ?></td>
-                        <td><?php echo htmlspecialchars($category["category_name"]); ?></td>
-                        <td><?php echo htmlspecialchars($category["description"]); ?></td>
-                        <td><?php echo htmlspecialchars($category["created_at"]); ?></td>
+                        <th>ID</th>
+                        <th>Category Name</th>
+                        <th>Description</th>
+                        <th>Date Created</th>
                     </tr>
-                <?php } ?>
+                </thead>
+                <tbody>
 
-            </tbody>
-        </table>
-    </div>
-    <?php require_once "../includes/footer.php"; ?>
+                    <?php while ($category = $categories->fetch_assoc()) { ?>
+                        <tr>
+                            <td><?php echo $category["id"]; ?></td>
+                            <td><?php echo htmlspecialchars($category["category_name"]); ?></td>
+                            <td><?php echo htmlspecialchars($category["description"]); ?></td>
+                            <td><?php echo htmlspecialchars($category["created_at"]); ?></td>
+                        </tr>
+
+                    <?php } ?>
+                </tbody>
+            </table>
+        </div>
+        <?php require_once "../includes/footer.php"; ?>
