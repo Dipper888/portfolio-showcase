@@ -72,6 +72,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["category_name"])) {
         }
         $stmt->close();
     }
+    
+    // Update category
+    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["update_id"])) {
+
+        $updateId = $_POST["update_id"];
+        $updateName = trim($_POST["update_name"]);
+        $updateDescription = trim($_POST["update_description"]);
+
+        // Check empty fields
+        if (empty($updateName) || empty($updateDescription)) {
+            $error = "Please fill in all fields.";
+        } else {
+
+            $sql = "UPDATE categories SET category_name = ?, description = ? WHERE id = ?";
+
+            $stmt = $conn->prepare($sql);
+
+            $stmt->bind_param("ssi",$updateName,$updateDescription,$updateId);
+
+            if ($stmt->execute()) {
+                $success = "Category updated successfully.";
+            } else {
+                $error = "Failed to update category.";
+            }
+            $stmt->close();
+        }
+    }
         // Get all categories
         $sql = "SELECT id, category_name, description, created_at FROM categories ORDER BY id DESC";
         $stmt = $conn->prepare($sql);
