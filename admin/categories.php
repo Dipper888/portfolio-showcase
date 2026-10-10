@@ -63,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $stmt->close();
     }
-    
+
     // Get all categories
         $sql = "SELECT id, category_name, description, created_at FROM categories ORDER BY id DESC";
 
@@ -117,3 +117,31 @@ require_once "../includes/header.php";
         <button type="submit" class="btn btn-primary">Create Category</button>
 
     </form>
+
+        <h4 class="mt-5">Existing Categories</h4>
+        <div class="table-responsive">
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Category Name</th>
+                    <th>Description</th>
+                    <th>Date Created</th>
+                </tr>
+
+            </thead>
+            <tbody>
+                <?php while ($category = $categories->fetch_assoc()) { ?>
+                    <tr>
+                        <td><?php echo $category["id"]; ?></td>
+                        <td><?php echo htmlspecialchars($category["category_name"]); ?></td>
+                        <td><?php echo htmlspecialchars($category["description"]); ?></td>
+                        <td><?php echo htmlspecialchars($category["created_at"]); ?></td>
+                    </tr>
+                <?php } ?>
+
+            </tbody>
+        </table>
+    </div>
+    <?php require_once "../includes/footer.php"; ?>
