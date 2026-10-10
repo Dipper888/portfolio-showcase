@@ -63,6 +63,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $stmt->close();
     }
+    
+    // Get all categories
+        $sql = "SELECT id, category_name, description, created_at FROM categories ORDER BY id DESC";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+
+        $categories = $stmt->get_result();
 }
 require_once "../includes/header.php";
 ?>
