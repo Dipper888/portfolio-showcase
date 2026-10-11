@@ -81,3 +81,85 @@ $projects = $stmt->get_result();
     <div class="row g-4 project-results">
 
 <?php endif; ?>
+
+<?php if ($projects->num_rows > 0): ?>
+    <?php while ($row = $projects->fetch_assoc()): ?>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body d-flex flex-column">
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="badge bg-primary">
+                            <?php echo htmlspecialchars($row["category_name"]); ?>
+                        </span>
+
+                        <small class="text-muted">
+                            <i class="bi bi-clock"></i>
+                            <?php echo date("d M Y", strtotime($row["created_at"])); ?>
+                        </small>
+                    </div>
+
+                    <h5 class="fw-bold">
+                        <?php echo htmlspecialchars($row["title"]); ?>
+                    </h5>
+
+                    <p class="text-muted">
+                        <?php echo htmlspecialchars($row["description"]); ?>
+                    </p>
+
+                    <div class="mb-3">
+                        <strong>Tech Stack:</strong>
+                        <div class="mt-2">
+                            <span class="badge bg-secondary">
+                                <?php echo htmlspecialchars($row["tech_stack"]); ?>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="border-top pt-3 mt-auto d-flex justify-content-between align-items-center">
+
+                        <small>
+                            <i class="bi bi-person-fill"></i>
+                            <?php echo htmlspecialchars($row["full_name"]); ?>
+                        </small>
+
+                        <!-- Show the report download link only for the student's own uploaded files. -->
+                        <?php if ($row["user_id"] == $_SESSION["user_id"] && !empty($row["file_path"])): ?>
+                            <a href="../download.php?project_id=<?php echo $row["id"]; ?>"
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-download"></i> Report
+                            </a>
+                        <?php endif; ?>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    <?php endwhile; ?>
+
+<?php else: ?>
+
+    <div class="col-12">
+        <div class="alert alert-info text-center">
+            <?php if ($keyword == ""): ?>
+                No portfolio projects in here.
+            <?php else: ?>
+                No matching projects found.
+            <?php endif; ?>
+        </div>
+    </div>
+
+<?php endif; ?>
+
+<?php if (!$isAjax): ?>
+
+    </div>
+
+    <script src="../validation.js"></script>
+
+    <?php include "../includes/footer.php"; ?>
+
+<?php endif; ?>
