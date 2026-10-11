@@ -151,10 +151,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["category_name"])) {
                             <td><?php echo htmlspecialchars($category["description"]); ?></td>
                             <td><?php echo htmlspecialchars($category["created_at"]); ?></td>
                             <td>
-                                <form method="POST" style="display: inline;">
-                                    <input type="hidden" name="delete_id" value="<?php echo $category["id"]; ?>">
-                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this category?')">Delete</button>
+
+                                <!-- Update Category -->
+                                <form method="POST" class="mb-2">
+                                    <input type="hidden" name="update_id" value="<?php echo $category["id"]; ?>">
+                                    <input type="text" name="update_name" class="form-control form-control-sm mb-2" value="<?php echo htmlspecialchars($category["category_name"]); ?>" required>
+                                    <input type="text" name="update_description" class="form-control form-control-sm mb-2" value="<?php echo htmlspecialchars($category["description"]); ?>" required>
+                                    <button type="submit" class="btn btn-warning btn-sm">Update</button>
                                 </form>
+
+
+                                <!-- Delete Category -->
+                                <form method="POST">
+                                    <input type="hidden" name="delete_id" value="<?php echo $category["id"]; ?>">
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this category?')"> Delete </button>
+                                </form>
+
                             </td>
                         </tr>
 
