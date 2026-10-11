@@ -1,127 +1,101 @@
 <?php
-
 session_start();
+
 require_once "includes/db.php";
 
-$error = "";
+if (isset($_SESSION["user_id"]) && isset($_SESSION["role"]))
+{
+    if ($_SESSION["role"] == "admin" || $_SESSION["role"] == "student")
+    {
+        header("Location: index.php");
+        exit();
+    }
+}
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
+$message = "";
 
+if ($_SERVER["REQUEST_METHOD"] == "POST")
+{
     $email = trim($_POST["email"] ?? "");
     $password = $_POST["password"] ?? "";
 
-    // Check empty fields
-    if ($email === "" || $password === "") {
-        $error = "Please enter email and password.";
-    } else {
-
-        // Find user using email
-        $stmt = $conn->prepare(
-            "SELECT id, full_name, email, password, role
-             FROM users
-             WHERE email = ?"
-        );
-
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-
-        $result = $stmt->get_result();
-
-        if ($result->num_rows === 1) {
-
+    // Server-side validation for login credentials.
+    if ($email != "" && trim($password) != "")
+    {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL))
+        {
+            $message = "Please enter a valid email address.";
+        }
+        else
+        {
+            // Use a prepared statement to retrieve the user securely.
+            $stmt = $conn->prepare("SELECT id, full_name, password, role FROM users WHERE email = ?");
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $result = $stmt->get_result();
             $user = $result->fetch_assoc();
 
-            // Verify hashed password
-            if (password_verify($password, $user["password"])) {
+            // Verify the hashed password and user role before allowing login.
+            if ($user && password_verify($password, $user["password"]) && ($user["role"] == "admin" || $user["role"] == "student"))
+            {
+                // Regenerate the session ID to prevent session fixation attacks.
+                session_regenerate_id(true);
 
+                // Store user details and role in the session for access control across pages.
                 $_SESSION["user_id"] = $user["id"];
                 $_SESSION["full_name"] = $user["full_name"];
                 $_SESSION["role"] = $user["role"];
+                $_SESSION["login_success"] = true;
 
-                // Redirect based on role
-                if ($user["role"] === "admin") {
-                    header("Location: admin/dashboard.php");
-                } else {
-                    header("Location: student/dashboard.php");
-                }
-
+                header("Location: index.php");
                 exit();
-
-            } else {
-                $error = "Invalid email or password.";
             }
-
-        } else {
-            $error = "Invalid email or password.";
+            else
+            {
+                $message = "Invalid email or password.";
+            }
         }
     }
 }
 
+require_once "includes/header.php";
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <h3 class="text-primary text-center mb-4"><i class="bi bi-box-arrow-in-right"></i> Login</h3>
 
-    <title>Login</title>
+                <?php if ($message != ""): ?>
+                    <div class="alert alert-danger">
+                        <?php echo htmlspecialchars($message); ?>
+                    </div>
+                <?php endif; ?>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+                <form method="POST" action="login.php" novalidate>
+                    <div class="mb-3">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" name="email" class="form-control">
+                    </div>
 
-    <link rel="stylesheet" href="css/styles.css">
-</head>
+                    <div class="mb-5">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control">
+                    </div>
 
-<body>
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-box-arrow-in-right"></i> Login</button>
+                </form>
 
-<div class="container mt-5">
+                <p class="text-center mt-3">Don't have an account? <a href="register.php">Register here</a>
+                </p>
 
-    <div class="col-md-6 mx-auto auth-card">
-
-        <h2 class="mb-4">Login</h2>
-
-        <?php if ($error !== ""): ?>
-            <div class="alert alert-danger">
-                <?= htmlspecialchars($error) ?>
             </div>
-        <?php endif; ?>
-
-        <form method="POST" id="loginForm">
-
-            <div class="mb-3">
-                <label class="form-label">Email</label>
-
-                <input type="email"
-                       name="email"
-                       id="email"
-                       class="form-control">
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Password</label>
-
-                <input type="password"
-                       name="password"
-                       id="password"
-                       class="form-control">
-            </div>
-
-            <button type="submit" class="btn btn-primary">
-                Login
-            </button>
-
-        </form>
-
-        <p class="mt-3">
-            Don't have an account?
-            <a href="register.php">Register here</a>
-        </p>
-
+        </div>
     </div>
-
 </div>
 
-</body>
-</html>
+<script src="validation.js"></script>
+
+<?php include "includes/footer.php"; ?>

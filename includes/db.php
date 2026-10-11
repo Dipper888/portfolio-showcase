@@ -1,14 +1,13 @@
 <?php
-
 $host = "localhost";
-$username = "root";
-$password = "";
+$dbUsername = "root";
+$dbPassword = "";
 $database = "portfolio_db";
 
-$conn = new mysqli($host, $username, $password, $database);
+$conn = new mysqli($host, $dbUsername, $dbPassword, $database);
 
-if ($conn->connect_error) {
+if ($conn->connect_error) 
+{
     die("Database connection failed: " . $conn->connect_error);
 }
-
 ?>

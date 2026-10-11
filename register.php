@@ -1,162 +1,113 @@
 <?php
-
 require_once "includes/db.php";
 
-$error = "";
-$success = "";
+$message = "";
+$alertType = "danger";
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-
-    $fullName = trim($_POST["full_name"] ?? "");
+if ($_SERVER["REQUEST_METHOD"] == "POST")
+{
+    $full_name = trim($_POST["full_name"] ?? "");
     $email = trim($_POST["email"] ?? "");
     $password = $_POST["password"] ?? "";
-    $confirmPassword = $_POST["confirm_password"] ?? "";
+    $confirm_password = $_POST["confirm_password"] ?? "";
 
-    // Check empty fields
-    if ($fullName === "" || $email === "" || $password === "" || $confirmPassword === "") {
-        $error = "Please complete all required fields.";
-    }
+    // Server-side validation before storing data.
+    if ($full_name != "" && $email != "" && trim($password) != "" && trim($confirm_password) != "")
+    {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL))
+        {
+            $message = "Invalid email address.";
+        }
+        elseif (strlen($password) < 8)
+        {
+            $message = "Password must be at least 8 characters.";
+        }
+        elseif ($password != $confirm_password)
+        {
+            $message = "Passwords do not match.";
+        }
+        else
+        {
+            // Check if the email is already registered using a prepared statement.
+            $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $stmt->store_result();
 
-    // Check email format
-    elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = "Please enter a valid email.";
-    }
+            if ($stmt->num_rows > 0)
+            {
+                $message = "Email already registered.";
+            }
+            else
+            {
+                // Hash the password before saving it.
+                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-    // Check password confirmation
-    elseif ($password !== $confirmPassword) {
-        $error = "Passwords do not match.";
-    }
+                // New accounts are registered as students, not admins.
+                $stmt = $conn->prepare("INSERT INTO users (full_name, email, password, role) VALUES (?, ?, ?, 'student')");
+                $stmt->bind_param("sss", $full_name, $email, $hashed_password);
 
-    else {
-
-        // Check whether email already exists
-        $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-
-        $result = $stmt->get_result();
-
-        if ($result->num_rows > 0) {
-            $error = "Email already registered.";
-        } else {
-
-            // Hash password before saving
-            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-            // Registration is only for students
-            $role = "student";
-
-            $stmt = $conn->prepare(
-                "INSERT INTO users (full_name, email, password, role)
-                 VALUES (?, ?, ?, ?)"
-            );
-
-            $stmt->bind_param(
-                "ssss",
-                $fullName,
-                $email,
-                $hashedPassword,
-                $role
-            );
-
-            if ($stmt->execute()) {
-                $success = "Registration successful.";
-            } else {
-                $error = "Registration failed.";
+                if ($stmt->execute())
+                {
+                    $message = "Registration successful!";
+                    $alertType = "success";
+                }
+                else
+                {
+                    $message = "Registration failed.";
+                }
             }
         }
     }
 }
 
+require_once "includes/header.php";
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <h3 class="text-primary text-center mb-4"><i class="bi bi-person-plus-fill"></i> Create Account</h3>
 
-    <title>Register</title>
+                <?php if ($message != ""): ?>
+                    <div class="alert alert-<?php echo $alertType; ?>">
+                        <?php echo htmlspecialchars($message); ?>
+                    </div>
+                <?php endif; ?>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+                <form method="POST" action="register.php" novalidate>
+                    <div class="mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" name="full_name" class="form-control">
+                    </div>
 
-    <link rel="stylesheet" href="css/styles.css">
-</head>
+                    <div class="mb-3">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" name="email" class="form-control">
+                    </div>
 
-<body>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control">
+                    </div>
 
-<div class="container mt-5">
+                    <div class="mb-5">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" name="confirm_password" class="form-control">
+                    </div>
 
-    <div class="col-md-6 mx-auto auth-card">
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-person-check-fill"></i> Register</button>
+                </form>
 
-        <h2 class="mb-4">Student Registration</h2>
+                <p class="text-center mt-3">Already have an account? <a href="login.php">Log in here</a></p>
 
-        <?php if ($error !== ""): ?>
-            <div class="alert alert-danger">
-                <?= htmlspecialchars($error) ?>
             </div>
-        <?php endif; ?>
-
-        <?php if ($success !== ""): ?>
-            <div class="alert alert-success">
-                <?= htmlspecialchars($success) ?>
-            </div>
-        <?php endif; ?>
-
-        <form method="POST" id="registerForm">
-
-            <div class="mb-3">
-                <label class="form-label">Full Name</label>
-
-                <input type="text"
-                       name="full_name"
-                       id="full_name"
-                       class="form-control">
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Email</label>
-
-                <input type="email"
-                       name="email"
-                       id="email"
-                       class="form-control">
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Password</label>
-
-                <input type="password"
-                       name="password"
-                       id="password"
-                       class="form-control">
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Confirm Password</label>
-
-                <input type="password"
-                       name="confirm_password"
-                       id="confirm_password"
-                       class="form-control">
-            </div>
-
-            <button type="submit" class="btn btn-primary">
-                Register
-            </button>
-
-        </form>
-
-        <p class="mt-3">
-            Already have an account?
-            <a href="login.php">Login here</a>
-        </p>
-
+        </div>
     </div>
-
 </div>
 
-</body>
-</html>
+<script src="validation.js"></script>
+
+<?php include "includes/footer.php"; ?>
