@@ -28,3 +28,29 @@ if (form)
         }
     });
 }
+
+// Update project search results without reloading the dashboard.
+const searchInput = document.querySelector('input[name="keyword"]');
+const searchResults = document.querySelector('.project-results');
+
+if (searchInput && searchResults)
+{
+    let latestSearch = 0;
+
+    searchInput.addEventListener('input', function () {
+        const searchNumber = ++latestSearch;
+        const keyword = encodeURIComponent(searchInput.value);
+
+        fetch('dashboard.php?ajax=1&keyword=' + keyword)
+            .then(function (response) {
+                if (!response.ok) throw new Error('Search failed');
+                return response.text();
+            })
+            .then(function (html) {
+                // Ignore older AJAX responses to show only the latest search results.
+                if (searchNumber === latestSearch) {
+                    searchResults.innerHTML = html;
+                }
+            });
+    });
+}
