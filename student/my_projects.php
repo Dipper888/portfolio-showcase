@@ -43,3 +43,52 @@ $projects = $stmt->get_result();
                         <th>Date</th>
                     </tr>
                 </thead>
+
+                <tbody>
+                    <?php if ($projects->num_rows > 0): ?>
+                        <?php while ($row = $projects->fetch_assoc()): ?>
+                            
+                            <tr>
+                                <td class="fw-bold"><?php echo htmlspecialchars($row["title"]); ?></td>
+
+                                <td>
+                                    <span class="badge bg-secondary"><?php echo htmlspecialchars($row["category_name"]); ?></span>
+                                </td>
+
+                                <td>
+                                    <?php echo htmlspecialchars($row["tech_stack"]); ?>
+                                </td>
+
+                                <td>
+                                    <!-- Show the download link only if a file was uploaded; download.php handles the request. -->
+                                    <?php if (!empty($row["file_path"])): ?>
+                                        <a href="../download.php?project_id=<?php echo $row["id"]; ?>" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-download"></i> Download
+                                        </a>
+                                    <?php else: ?>
+                                        <span class="text-muted">No File</span>
+                                    <?php endif; ?>
+                                </td>
+
+                                <td>
+                                    <?php echo date("d M Y", strtotime($row["created_at"])); ?>
+                                </td>
+                            </tr>
+
+                        <?php endwhile; ?>
+
+                    <?php else: ?>
+                        
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No portfolio submissions in here.</td>
+                        </tr>
+                    
+                        <?php endif; ?>
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+</div>
+
+<?php include "../includes/footer.php"; ?>
