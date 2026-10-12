@@ -7,6 +7,7 @@ if (form)
         const fields = form.querySelectorAll('input[name], select[name], textarea[name]');
 
         const hasEmpty = Array.from(fields).some(function (field) {
+            if (field.type === 'hidden' || field.dataset.optional === 'true') return false;
             if (field.type === 'file') {
                 return field.files.length === 0;
             }
