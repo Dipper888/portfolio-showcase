@@ -45,6 +45,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
                     $editId = "";
                 }
             }
+            else
+            {
+                $error = "A category with this name already exists.";
+            }
         }
     }
     elseif (isset($_POST["delete"]) && ctype_digit($categoryId))
