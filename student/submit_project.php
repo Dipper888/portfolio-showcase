@@ -65,28 +65,49 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
 
     if ($valid && $hasFile)
     {
-        // Check file type and the 5 MB limit before uploading.
-        $extension = strtolower(pathinfo($upload["name"], PATHINFO_EXTENSION));
-        $allowedTypes = [
-            "pdf" => ["application/pdf"],
-            "docx" => ["application/zip", "application/x-zip-compressed", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
-            "txt" => ["text/plain"],
-            "zip" => ["application/zip", "application/x-zip-compressed"]];
-
-        if ($upload["error"] != UPLOAD_ERR_OK || $upload["size"] == 0 || $upload["size"] > 5 * 1024 * 1024)
+        // Check file size and allowed file types before saving.
+        if ($upload["error"] == UPLOAD_ERR_INI_SIZE || $upload["error"] == UPLOAD_ERR_FORM_SIZE ||
+            $upload["size"] > 5 * 1024 * 1024)
         {
             $fileError = "File size must not exceed 5 MB.";
         }
-        elseif (!isset($allowedTypes[$extension]) || !in_array(mime_content_type($upload["tmp_name"]), $allowedTypes[$extension]))
+        elseif ($upload["error"] != UPLOAD_ERR_OK || $upload["size"] == 0)
         {
-            $fileError = "Only PDF, DOCX, TXT or ZIP files are allowed.";
+            $fileError = "File upload failed. Please try again.";
         }
         else
         {
-            $fileName = uniqid("project_") . "." . $extension;
-            $newFile = __DIR__ . "/../uploads/" . $fileName;
-            $filePath = "uploads/" . $fileName;
-            $valid = move_uploaded_file($upload["tmp_name"], $newFile);
+            $extension = strtolower(pathinfo($upload["name"], PATHINFO_EXTENSION));
+            $mimeType = mime_content_type($upload["tmp_name"]);
+            $correctType = false;
+
+            if ($extension == "pdf" && $mimeType == "application/pdf")
+            {
+                $correctType = true;
+            }
+            elseif ($extension == "txt" && $mimeType == "text/plain")
+            {
+                $correctType = true;
+            }
+            elseif ($extension == "docx" || $extension == "zip")
+            {
+                // DOCX and ZIP both use a ZIP file structure.
+                $fileHeader = file_get_contents($upload["tmp_name"], false, null, 0, 4);
+                $correctType = $fileHeader == "PK\x03\x04" || $fileHeader == "PK\x05\x06";
+            }
+
+            if (!$correctType)
+            {
+                $fileError = "Only PDF, DOCX, TXT or ZIP files are allowed.";
+            }
+            else
+            {
+                $fileName = uniqid("project_") . "." . $extension;
+                $newFile = __DIR__ . "/../uploads/" . $fileName;
+                $filePath = "uploads/" . $fileName;
+                $valid = move_uploaded_file($upload["tmp_name"], $newFile);
+                if (!$valid) $fileError = "File upload failed. Please try again.";
+            }
         }
 
         if ($fileError != "") $valid = false;

@@ -66,26 +66,28 @@ portfolio-showcase/
 │   ├── categories.php
 │   ├── dashboard.php
 │   └── submissions.php
+|
 ├── includes/
 │   ├── db.php
 │   ├── footer.php
 │   └── header.php
+|
 ├── student/
 │   ├── dashboard.php
 │   ├── my_projects.php
 │   └── submit_project.php
+|
 ├── uploads/
-│   └── .gitkeep
-├── .gitignore
+│   
 ├── download.php
 ├── index.php
+├── register.php
 ├── login.php
 ├── logout.php
 ├── portfolio_db.sql
-├── README.md
-├── register.php
+├── validation.js
 ├── styles.css
-└── validation.js
+└── README.md
 ```
 
 **Main files:**
@@ -209,8 +211,6 @@ Passwords are stored using `password_hash()` and checked using `password_verify(
 **File download:** Students can download their own project documents through `download.php`. Admin can download student documents through the same file.
 
 **AJAX search:** `validation.js` sends the entered keyword to `student/dashboard.php?ajax=1&keyword=...`, and the matching project cards are updated without reloading the full page.
-
-**Git files:** The existing `.gitignore` ignores the uploaded documents inside `uploads/` but keeps `uploads/.gitkeep`. Uploaded testing documents are local data and are not part of the source code in GitHub.
 
 ## Testing Checklist
 
