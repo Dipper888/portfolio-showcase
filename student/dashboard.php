@@ -85,16 +85,16 @@ $projects = $stmt->get_result();
 <?php if ($projects->num_rows > 0): ?>
     <?php while ($row = $projects->fetch_assoc()): ?>
 
-        <div class="col-md-6 col-lg-4">
+        <div class="col-12 col-md-6 col-xl-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body d-flex flex-column">
 
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="badge bg-primary">
+                    <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+                        <span class="badge bg-primary text-wrap text-start">
                             <?php echo htmlspecialchars($row["category_name"]); ?>
                         </span>
 
-                        <small class="text-muted">
+                        <small class="text-muted text-nowrap">
                             <i class="bi bi-clock"></i>
                             <?php echo date("d M Y", strtotime($row["created_at"])); ?>
                         </small>
