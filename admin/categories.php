@@ -1,177 +1,142 @@
 <?php
-session_start();
+$required_role = "admin";
 
 require_once "../includes/db.php";
+require_once "../includes/header.php";
 
-// Check if user is logged in
-if (!isset($_SESSION["user_id"])) {
+$message = "";
+$alertType = "danger";
 
-    header("Location: ../login.php");
-    exit();
+if ($_SERVER["REQUEST_METHOD"] == "POST")
+{
+    $category_name = trim($_POST["category_name"] ?? "");
+    $description = trim($_POST["description"] ?? "");
 
-}
-
-// Check if user is admin
-if ($_SESSION["role"] != "admin") {
-
-    header("Location: ../student/dashboard.php");
-    exit();
-
-}
-
-// Message variables
-$error = "";
-$success = "";
-
-// Create category
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["category_name"])) {
-
-    // Get form data
-    $categoryName = trim($_POST["category_name"]);
-    $description = trim($_POST["description"]);
-
-    // Check empty fields
-    if (empty($categoryName) || empty($description)) {
-
-        $error = "Please fill in all fields.";
-
-    } else {
-
-        // Insert category
-        $sql = "INSERT INTO categories (category_name, description)
-                VALUES (?, ?)";
-
-        $stmt = $conn->prepare($sql);
-
-        // Bind values
-        $stmt->bind_param("ss",$categoryName,$description);
-
-        // Execute statement
-        if ($stmt->execute()) {
-            $success = "Category created successfully.";
-        } else {
-            $error = "Failed to create category.";
+    // Server-side validation for category creation.
+    if ($category_name != "" && $description != "")
+    {
+        if (strlen($category_name) > 100)
+        {
+            $message = "Category name must not exceed 100 characters.";
         }
+        else
+        {
+            // Check for existing categories to prevent duplicate records.
+            $stmt = $conn->prepare("SELECT id FROM categories WHERE category_name = ?");
+            $stmt->bind_param("s", $category_name);
+            $stmt->execute();
+            $stmt->store_result();
 
-        $stmt->close();
-    }
-}
-
-
-    // Delete category
-    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["delete_id"])) {
-        $deleteId = $_POST["delete_id"];
-        $sql = "DELETE FROM categories WHERE id = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("i",$deleteId);
-
-        if ($stmt->execute()) {
-            $success = "Category deleted successfully.";
-        } else {
-            $error = "Failed to delete category.";
-        }
-        $stmt->close();
-    }
-    
-    // Update category
-    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["update_id"])) {
-
-        $updateId = $_POST["update_id"];
-        $updateName = trim($_POST["update_name"]);
-        $updateDescription = trim($_POST["update_description"]);
-
-        // Check empty fields
-        if (empty($updateName) || empty($updateDescription)) {
-            $error = "Please fill in all fields.";
-        } else {
-
-            $sql = "UPDATE categories SET category_name = ?, description = ? WHERE id = ?";
-
-            $stmt = $conn->prepare($sql);
-
-            $stmt->bind_param("ssi",$updateName,$updateDescription,$updateId);
-
-            if ($stmt->execute()) {
-                $success = "Category updated successfully.";
-            } else {
-                $error = "Failed to update category.";
+            if ($stmt->num_rows > 0)
+            {
+                $message = "Category already exists.";
             }
-            $stmt->close();
+            else
+            {
+                // Insert the category using a prepared statement.
+                $stmt = $conn->prepare("INSERT INTO categories (category_name, description) VALUES (?, ?)");
+                $stmt->bind_param("ss", $category_name, $description);
+
+                if ($stmt->execute())
+                {
+                    $message = "Category added successfully!";
+                    $alertType = "success";
+                }
+                else
+                {
+                    $message = "Failed to add category.";
+                }
+            }
         }
     }
-        // Get all categories
-        $sql = "SELECT id, category_name, description, created_at FROM categories ORDER BY id DESC";
-        $stmt = $conn->prepare($sql);
-        $stmt->execute();
-        $categories = $stmt->get_result();
+}
 
-        require_once "../includes/header.php";
+$stmt = $conn->prepare("SELECT category_name, description FROM categories ORDER BY category_name");
+$stmt->execute();
+$categories = $stmt->get_result();
 ?>
-        <h2>Manage Categories</h2>
-        <p>Create and manage project categories.</p>
 
-        <!-- Create Category -->
-        <h4 class="mt-4">Create Category</h4>
+<h2 class="fw-bold mb-4"><i class="bi bi-folder-plus text-primary"></i> Category Management</h2>
 
-        <form method="POST">
+<?php if ($message != ""): ?>
+    <div class="alert alert-<?php echo $alertType; ?>">
+        <?php echo htmlspecialchars($message); ?>
+    </div>
+<?php endif; ?>
 
-            <div class="mb-3">
-                <label class="form-label">Category Name</label>
-                <input type="text" name="category_name" class="form-control" required>
+<div class="row g-4">
+
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-body">
+
+                <h4 class="text-primary mb-3">
+                    <i class="bi bi-plus-square-fill"></i> Create Category
+                </h4>
+
+                <form method="POST" action="categories.php" novalidate>
+                    <div class="mb-3">
+                        <label class="form-label">Category Name</label>
+                        <input type="text" name="category_name" class="form-control">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="4"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus-lg"></i> Add Category</button>
+                </form>
+
             </div>
-
-            <div class="mb-3">
-                <label class="form-label">Description</label>
-                <textarea name="description" class="form-control" rows="4" required></textarea>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Create Category</button>
-
-        </form>
-
-        <!-- Existing  Category -->
-        <h4 class="mt-5">Existing Categories</h4>
-        <div class="table-responsive">
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Category Name</th>
-                        <th>Description</th>
-                        <th>Date Created</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-
-                    <?php while ($category = $categories->fetch_assoc()) { ?>
-                        <tr>
-                            <td><?php echo $category["id"]; ?></td>
-                            <td><?php echo htmlspecialchars($category["category_name"]); ?></td>
-                            <td><?php echo htmlspecialchars($category["description"]); ?></td>
-                            <td><?php echo htmlspecialchars($category["created_at"]); ?></td>
-                            <td>
-
-                                <!-- Update Category -->
-                                <form method="POST" class="mb-2">
-                                    <input type="hidden" name="update_id" value="<?php echo $category["id"]; ?>">
-                                    <input type="text" name="update_name" class="form-control form-control-sm mb-2" value="<?php echo htmlspecialchars($category["category_name"]); ?>" required>
-                                    <input type="text" name="update_description" class="form-control form-control-sm mb-2" value="<?php echo htmlspecialchars($category["description"]); ?>" required>
-                                    <button type="submit" class="btn btn-warning btn-sm">Update</button>
-                                </form>
-
-
-                                <!-- Delete Category -->
-                                <form method="POST">
-                                    <input type="hidden" name="delete_id" value="<?php echo $category["id"]; ?>">
-                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this category?')"> Delete </button>
-                                </form>
-
-                            </td>
-                        </tr>
-
-                    <?php } ?>
-                </tbody>
-            </table>
         </div>
-        <?php require_once "../includes/footer.php"; ?>
+    </div>
+
+    <div class="col-md-7">
+        <div class="card shadow-sm">
+            <div class="card-body">
+
+                <h4 class="mb-3">Existing Categories</h4>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+
+                        <thead class="table-light">
+                            <tr>
+                                <th>Category Name</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <?php if ($categories->num_rows > 0): ?>
+                                <?php while ($row = $categories->fetch_assoc()): ?>
+
+                                    <tr>
+                                        <td class="fw-bold"><?php echo htmlspecialchars($row["category_name"]); ?></td>
+                                        <td><?php echo htmlspecialchars($row["description"]); ?></td>
+                                    </tr>
+
+                                <?php endwhile; ?>
+
+                            <?php else: ?>
+                            
+                                <tr>
+                                    <td colspan="2" class="text-center text-muted">No categories available.</td>
+                                </tr>
+
+                            <?php endif; ?>
+                        </tbody>
+
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="../validation.js"></script>
+
+<?php include "../includes/footer.php"; ?>

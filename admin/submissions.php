@@ -1,32 +1,13 @@
 <?php
-session_start();
+$required_role = "admin";
 
 require_once "../includes/db.php";
+require_once "../includes/header.php";
 
-// Check if user is logged in
-if (!isset($_SESSION["user_id"])) {
-
-    header("Location: ../login.php");
-    exit();
-
-}
-
-// Check if user is admin
-if ($_SESSION["role"] != "admin") {
-
-    header("Location: ../student/dashboard.php");
-    exit();
-
-}
-
-// Get all submissions using SQL JOIN
-$sql = "SELECT projects.id,
-               projects.title,
-               projects.description,
-               projects.file_name,
-               projects.created_at,
-               users.username,
-               categories.category_name
+// Retrieve all student submissions using SQL JOIN.
+$sql = "SELECT projects.id, users.full_name, users.email,
+        projects.title, categories.category_name,
+        projects.tech_stack, projects.file_path, projects.created_at
         FROM projects
         JOIN users ON projects.user_id = users.id
         JOIN categories ON projects.category_id = categories.id
@@ -35,58 +16,81 @@ $sql = "SELECT projects.id,
 $stmt = $conn->prepare($sql);
 $stmt->execute();
 $submissions = $stmt->get_result();
-
-require_once "../includes/header.php";
 ?>
 
-<h2>Student Submissions</h2>
-<p>View all submitted student projects.</p>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold"><i class="bi bi-list-check text-primary"></i> All Student Submissions</h2>
 
-<div class="table-responsive">
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Student</th>
-                <th>Project Title</th>
-                <th>Category</th>
-                <th>Description</th>
-                <th>File</th>
-                <th>Date Submitted</th>
-            </tr>
-        </thead>
-        <tbody>
-
-            <?php if ($submissions->num_rows > 0) { ?>
-
-                <?php while ($submission = $submissions->fetch_assoc()) { ?>
-
-                    <tr>
-                        <td><?php echo $submission["id"]; ?></td>
-                        <td><?php echo htmlspecialchars($submission["username"]); ?></td>
-                        <td><?php echo htmlspecialchars($submission["title"]); ?></td>
-                        <td><?php echo htmlspecialchars($submission["category_name"]); ?></td>
-                        <td><?php echo htmlspecialchars($submission["description"]); ?></td>
-                        <td>
-                            <a href="../download.php?id=<?php echo $submission["id"]; ?>" class="btn btn-success btn-sm">
-                                Download
-                            </a>
-                        </td>
-                        <td><?php echo htmlspecialchars($submission["created_at"]); ?></td>
-                    </tr>
-
-                <?php } ?>
-
-            <?php } else { ?>
-
-                <tr>
-                    <td colspan="7" class="text-center">No submissions found.</td>
-                </tr>
-
-            <?php } ?>
-
-        </tbody>
-    </table>
+    <span class="badge bg-primary">Total: <?php echo $submissions->num_rows; ?> Projects</span>
 </div>
 
-<?php require_once "../includes/footer.php"; ?>
+<div class="card shadow-sm">
+    <div class="card-body">
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+
+                <thead class="table-dark">
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Project Title</th>
+                        <th>Category</th>
+                        <th>Tech Stack</th>
+                        <th>Submitted File</th>
+                        <th>Date Submitted</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <?php if ($submissions->num_rows > 0): ?>
+                        <?php while ($row = $submissions->fetch_assoc()): ?>
+
+                            <tr>
+                                <td>
+                                    <strong><?php echo htmlspecialchars($row["full_name"]); ?></strong>
+                                    <div class="text-muted small"><?php echo htmlspecialchars($row["email"]); ?></div>
+                                </td>
+
+                                <td>
+                                    <?php echo htmlspecialchars($row["title"]); ?>
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-secondary"><?php echo htmlspecialchars($row["category_name"]); ?></span>
+                                </td>
+
+                                <td>
+                                    <?php echo htmlspecialchars($row["tech_stack"]); ?>
+                                </td>
+
+                                <td>
+                                    <!-- Show the download link when a file path exists; download.php handles the request. -->
+                                    <?php if ($row["file_path"] != ""): ?>
+                                        <a href="../download.php?project_id=<?php echo $row["id"]; ?>" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-download"></i> Download
+                                        </a>
+                                    <?php else: ?>
+                                        <span class="text-muted">No File</span>
+                                    <?php endif; ?>
+                                </td>
+
+                                <td>
+                                    <?php echo date("d M Y, h:i A", strtotime($row["created_at"])); ?>
+                                </td>
+                            </tr>
+
+                        <?php endwhile; ?>
+
+                    <?php else: ?>
+
+                        <tr><td colspan="6" class="text-center text-muted">No submissions in here.</td></tr>
+
+                    <?php endif; ?>
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+</div>
+
+<?php include "../includes/footer.php"; ?>

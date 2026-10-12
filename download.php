@@ -1,56 +1,48 @@
 <?php
 session_start();
-
 require_once "includes/db.php";
 
-// Check if user is logged in
-if (!isset($_SESSION["user_id"])) {
+if (!isset($_SESSION["user_id"]) || !isset($_SESSION["role"]))
+{
     header("Location: login.php");
     exit();
 }
 
-// Check if user is admin
-if ($_SESSION["role"] != "admin") {
-    header("Location: student/dashboard.php");
-    exit();
+$projectId = filter_input(INPUT_GET, "project_id", FILTER_VALIDATE_INT);
+
+if (!$projectId || $projectId < 1)
+{
+    die("Invalid project ID.");
 }
 
-// Check project ID
-if (!isset($_GET["id"]) || !is_numeric($_GET["id"])) {
-    die("Invalid file request.");
-}
-
-$projectId = (int) $_GET["id"];
-
-// Get file path from database
-$sql = "SELECT file_path FROM projects WHERE id = ?";
-
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i",$projectId);
+$stmt = $conn->prepare("SELECT user_id, file_path FROM projects WHERE id = ?");
+$stmt->bind_param("i", $projectId);
 $stmt->execute();
+$project = $stmt->get_result()->fetch_assoc();
 
-$result = $stmt->get_result();
-
-// Check if project exists
-if ($result->num_rows != 1) {
+if (!$project || empty($project["file_path"]))
+{
     die("File not found.");
 }
 
-$project = $result->fetch_assoc();
+// Allow Admin or the Student who owns the project.
+if ($_SESSION["role"] != "admin" && 
+    ($_SESSION["role"] != "student" || $_SESSION["user_id"] != $project["user_id"]))
+{
+    die("Access denied.");
+}
 
+// Use only the file name to keep downloads inside the uploads folder.
 $fileName = basename($project["file_path"]);
 $filePath = __DIR__ . "/uploads/" . $fileName;
 
-// Check if file exists
-if (!file_exists($filePath)) {
-    die("File not found.");
+if (!is_file($filePath))
+{
+    die("Uploaded file is missing from the server.");
 }
 
-// Download file
-header("Content-Type: application/octet-stream");
-header("Content-Disposition: attachment; filename=\"" . $fileName . "\"");
-header("Content-Length: " . filesize($filePath));
+// Tell the browser to download the file, then send its contents.
+header('Content-Disposition: attachment; filename="' . $fileName . '"');
 
 readfile($filePath);
-exit();
 ?>
