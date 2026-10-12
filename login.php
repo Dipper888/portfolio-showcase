@@ -52,7 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
             }
             else
             {
-                $message = "Invalid email or password.";
+                $message = "Invalid password.";
             }
         }
     }
