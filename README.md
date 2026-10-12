@@ -78,7 +78,7 @@ portfolio-showcase/
 │   └── submit_project.php
 |
 ├── uploads/
-│   
+|
 ├── download.php
 ├── index.php
 ├── register.php
